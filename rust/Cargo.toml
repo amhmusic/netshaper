@@ -8,9 +8,10 @@ name = "netshaper"
 path = "main.rs"
 
 [dependencies]
-
-# OLED display (SSD1306 / SSD1305 / SSD1315 — same driver)
-embedded-graphics = "0.8.2"
+embedded-graphics = "0.8"
+ssd1306 = "0.9"
+embedded-hal = "1.0"
+rppal = "0.18"
 
 [profile.release]
 opt-level = "z"   # minimise binary size on the Pi
