@@ -43,7 +43,7 @@ import adafruit_ssd1306
 
 IFACE_IN          = "eth0"
 IFACE_OUT         = "eth1"
-DISPLAY_IFACE     = "wlan0"   # Interface shown on the OLED for the IP address
+DISPLAY_IFACE     = "eth0"   # Interface shown on the OLED for the IP address
 BIND_HOST         = "0.0.0.0"
 BIND_PORT         = 8080
 REFRESH_INTERVAL  = 2         # seconds between OLED refreshes
@@ -85,15 +85,13 @@ def _run_tc(*args: str) -> None:
 
 
 def _delete_root_qdisc(iface: str) -> None:
-    """Remove the root qdisc; silently ignore 'nothing to remove' errors."""
     result = subprocess.run(
         ["tc", "qdisc", "del", "dev", iface, "root"],
         capture_output=True, text=True,
     )
     if result.returncode != 0:
         msg = result.stderr.strip()
-        # Not an error if there was nothing to delete
-        if "No such file" not in msg and "Cannot find" not in msg:
+        if not any(s in msg for s in ("No such file", "Cannot find", "Cannot delete qdisc with handle of zero")):
             raise RuntimeError(msg)
 
 

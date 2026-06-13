@@ -2,6 +2,7 @@
 Description=Network Shaper Service
 
 [Service]
+Environment="PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 ExecStart=/usr/bin/python3 /usr/local/bin/netshaper.py
 Restart=always
 
