@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-tc-service: REST API for traffic control (tc) + SSD1306 OLED display.
+netshaper: REST API for traffic control (tc) + SSD1306 OLED display.
 
 The FastAPI server and the display loop run concurrently in the same process:
   - A background thread drives the OLED, reading shared state.
@@ -30,7 +30,9 @@ from typing import Optional
 
 import uvicorn
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field, model_validator
+import os
 
 import board
 import busio
@@ -239,7 +241,7 @@ async def lifespan(app: FastAPI):
     log.info("Display thread stopped")
 
 app = FastAPI(
-    title="tc-service",
+    title="Netshaper",
     description="REST API for Linux traffic control (tc) on Raspberry Pi",
     version="1.0.0",
     lifespan=lifespan,
@@ -389,6 +391,13 @@ def clear_both():
     if errors:
         raise HTTPException(status_code=500, detail="; ".join(errors))
     return {"message": "Cleared all interfaces", "interfaces": [IFACE_IN, IFACE_OUT]}
+
+
+@app.get("/", response_class=HTMLResponse, include_in_schema=False)
+def ui():
+    here = os.path.dirname(os.path.abspath(__file__))
+    with open(os.path.join(here, "ui.html")) as f:
+        return f.read()
 
 
 # ──────────────────────────────────────────────────────────────────────────────

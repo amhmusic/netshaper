@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Netshaper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:       #f5f5f5;
+    --surface:  #ffffff;
+    --border:   #e0e0e0;
+    --text:     #212121;
+    --muted:    #757575;
+    --blue:     #1a73e8;
+    --blue-bg:  #e8f0fe;
+    --green:    #1e8e3e;
+    --green-bg: #e6f4ea;
+    --red:      #d93025;
+    --red-bg:   #fce8e6;
+    --radius:   4px;
+    --radius-lg: 8px;
+  }
+
+  body {
+    font-family: 'Roboto', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+    padding: 24px;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .logo-text {
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .ip-label {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .health {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .health-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #bdbdbd;
+    flex-shrink: 0;
+    transition: background 0.3s;
+  }
+  .health-dot.ok  { background: var(--green); }
+  .health-dot.err { background: var(--red); }
+
+  .iface-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  @media (max-width: 600px) { .iface-grid { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .iface-name {
+    font-size: 15px;
+    font-weight: 500;
+  }
+
+  .iface-role {
+    font-size: 12px;
+    color: var(--muted);
+    margin-left: 6px;
+    font-weight: 400;
+  }
+
+  .chip {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 2px 10px;
+    border-radius: 12px;
+  }
+  .chip.active   { background: var(--green-bg); color: var(--green); }
+  .chip.inactive { background: #f5f5f5; color: var(--muted); }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .stat {
+    padding: 12px 16px;
+    text-align: center;
+    border-right: 1px solid var(--border);
+  }
+  .stat:last-child { border-right: none; }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 2px;
+  }
+
+  .stat-value {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .stat-value.live { color: var(--blue); }
+
+  .form-body { padding: 16px; }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .field { display: flex; flex-direction: column; gap: 4px; }
+
+  .field label {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .field input[type=number] {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: 'Roboto', sans-serif;
+    font-size: 14px;
+    padding: 7px 10px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.15s;
+    -moz-appearance: textfield;
+  }
+  .field input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .field input[type=number]:focus { border-color: var(--blue); }
+  .field input[type=number]::placeholder { color: #bdbdbd; }
+
+  .btn-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  button {
+    font-family: 'Roboto', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 7px 16px;
+    border-radius: var(--radius);
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.15s, background 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  button:active { opacity: 0.8; }
+  button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .btn-apply  { background: var(--blue-bg); color: var(--blue); }
+  .btn-apply:hover:not(:disabled)  { background: #d2e3fc; }
+  .btn-clear  { background: var(--red-bg);  color: var(--red); }
+  .btn-clear:hover:not(:disabled)  { background: #f5c6c3; }
+  .btn-secondary { background: #f5f5f5; color: var(--text); }
+  .btn-secondary:hover:not(:disabled) { background: #eeeeee; }
+
+  .global-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+
+  .global-label {
+    font-size: 13px;
+    color: var(--muted);
+    margin-right: 4px;
+    flex: 1;
+  }
+
+  #toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    padding: 10px 16px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.2s, transform 0.2s;
+    pointer-events: none;
+    z-index: 999;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  #toast.show { opacity: 1; transform: translateY(0); }
+  #toast.ok  { background: var(--green-bg); color: var(--green); }
+  #toast.err { background: var(--red-bg);   color: var(--red); }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner {
+    width: 13px; height: 13px;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    display: none;
+  }
+  button.loading .spinner { display: block; }
+  button.loading .btn-icon { display: none; }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="logo-text">Netshaper</span>
+  <div class="header-right">
+    <span class="ip-label" id="ip-display"></span>
+    <div class="health">
+      <span class="health-dot" id="health-dot"></span>
+      <span id="health-label">connecting</span>
+    </div>
+  </div>
+</header>
+
+<div class="iface-grid" id="iface-grid"></div>
+
+<div class="global-bar">
+  <span class="global-label">Both interfaces</span>
+  <button class="btn-apply" id="btn-apply-both" onclick="applyBoth()">
+    <span class="btn-icon">Apply both</span>
+    <span class="spinner" aria-hidden="true"></span>
+  </button>
+  <button class="btn-clear" id="btn-clear-both" onclick="clearBoth()">
+    <span class="btn-icon">Clear all</span>
+    <span class="spinner" aria-hidden="true"></span>
+  </button>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const IFACES = [
+  { id: 'eth0', role: 'ingress' },
+  { id: 'eth1', role: 'egress' },
+];
+
+const FIELDS = [
+  { key: 'bandwidth_kbps',    label: 'Bandwidth (kbps)', placeholder: '5000' },
+  { key: 'latency_ms',        label: 'Latency (ms)',     placeholder: '100' },
+  { key: 'jitter_ms',         label: 'Jitter (ms)',      placeholder: '10' },
+  { key: 'loss_percent',      label: 'Loss (%)',         placeholder: '2',  step: '0.01' },
+  { key: 'duplicate_percent', label: 'Duplicate (%)',    placeholder: '0',  step: '0.01' },
+  { key: 'corrupt_percent',   label: 'Corrupt (%)',      placeholder: '0',  step: '0.01' },
+];
+
+function buildCards() {
+  const grid = document.getElementById('iface-grid');
+  grid.innerHTML = '';
+  for (const iface of IFACES) {
+    const rows = [];
+    for (let i = 0; i < FIELDS.length; i += 2) {
+      rows.push([FIELDS[i], FIELDS[i + 1]]);
+    }
+    const rowsHtml = rows.map(([a, b]) => `
+      <div class="field-row">
+        ${fieldHtml(iface.id, a)}
+        ${b ? fieldHtml(iface.id, b) : '<div class="field"></div>'}
+      </div>
+    `).join('');
+
+    grid.innerHTML += `
+      <div class="card" id="card-${iface.id}">
+        <div class="card-header">
+          <span class="iface-name">${iface.id}<span class="iface-role">${iface.role}</span></span>
+          <span class="chip inactive" id="chip-${iface.id}">inactive</span>
+        </div>
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-label">Bandwidth</div>
+            <div class="stat-value" id="stat-bw-${iface.id}">—</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Latency</div>
+            <div class="stat-value" id="stat-lat-${iface.id}">—</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Loss</div>
+            <div class="stat-value" id="stat-loss-${iface.id}">—</div>
+          </div>
+        </div>
+        <div class="form-body">
+          ${rowsHtml}
+          <div class="btn-row">
+            <button class="btn-apply" id="btn-apply-${iface.id}" onclick="applyIface('${iface.id}')">
+              <span class="btn-icon">Apply</span>
+              <span class="spinner" aria-hidden="true"></span>
+            </button>
+            <button class="btn-clear" id="btn-clear-${iface.id}" onclick="clearIface('${iface.id}')">
+              <span class="btn-icon">Clear</span>
+              <span class="spinner" aria-hidden="true"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+}
+
+function fieldHtml(iface, f) {
+  return `
+    <div class="field">
+      <label for="${iface}-${f.key}">${f.label}</label>
+      <input type="number" id="${iface}-${f.key}" placeholder="${f.placeholder}" min="0" step="${f.step || '1'}">
+    </div>
+  `;
+}
+
+function getFieldValue(iface, key) {
+  const el = document.getElementById(`${iface}-${key}`);
+  if (!el || el.value === '') return null;
+  return parseFloat(el.value);
+}
+
+function setFieldValue(iface, key, val) {
+  const el = document.getElementById(`${iface}-${key}`);
+  if (el) el.value = (val != null) ? val : '';
+}
+
+function buildPayload(iface) {
+  const payload = {};
+  for (const f of FIELDS) {
+    const v = getFieldValue(iface, f.key);
+    if (v !== null) payload[f.key] = v;
+  }
+  return payload;
+}
+
+function clearFields(iface) {
+  for (const f of FIELDS) setFieldValue(iface, f.key, '');
+}
+
+async function applyIface(iface) {
+  const btn = document.getElementById(`btn-apply-${iface}`);
+  setLoading(btn, true);
+  try {
+    const res = await fetch(`/tc/${iface}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(buildPayload(iface)),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    toast(`${iface} applied`, 'ok');
+    await refreshState();
+  } catch (e) {
+    toast(`${iface}: ${e.message}`, 'err');
+  } finally {
+    setLoading(btn, false);
+  }
+}
+
+async function clearIface(iface) {
+  const btn = document.getElementById(`btn-clear-${iface}`);
+  setLoading(btn, true);
+  try {
+    const res = await fetch(`/tc/${iface}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    clearFields(iface);
+    toast(`${iface} cleared`, 'ok');
+    await refreshState();
+  } catch (e) {
+    toast(`${iface}: ${e.message}`, 'err');
+  } finally {
+    setLoading(btn, false);
+  }
+}
+
+async function applyBoth() {
+  const btn = document.getElementById('btn-apply-both');
+  setLoading(btn, true);
+  try {
+    const payload = {};
+    for (const iface of IFACES) payload[iface.id] = buildPayload(iface.id);
+    const res = await fetch('/tc', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    toast('Both interfaces applied', 'ok');
+    await refreshState();
+  } catch (e) {
+    toast(e.message, 'err');
+  } finally {
+    setLoading(btn, false);
+  }
+}
+
+async function clearBoth() {
+  const btn = document.getElementById('btn-clear-both');
+  setLoading(btn, true);
+  try {
+    const res = await fetch('/tc', { method: 'DELETE' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    for (const iface of IFACES) clearFields(iface.id);
+    toast('All interfaces cleared', 'ok');
+    await refreshState();
+  } catch (e) {
+    toast(e.message, 'err');
+  } finally {
+    setLoading(btn, false);
+  }
+}
+
+async function refreshState() {
+  try {
+    const res = await fetch('/tc');
+    if (!res.ok) return;
+    const data = await res.json();
+    for (const iface of IFACES) {
+      const s = data.interfaces?.[iface.id];
+      if (!s) continue;
+      const active = s.active;
+      const settings = s.settings || {};
+
+      const chip = document.getElementById(`chip-${iface.id}`);
+      chip.textContent = active ? 'active' : 'inactive';
+      chip.className = `chip ${active ? 'active' : 'inactive'}`;
+
+      for (const f of FIELDS) setFieldValue(iface.id, f.key, settings[f.key] ?? '');
+
+      const bwEl   = document.getElementById(`stat-bw-${iface.id}`);
+      const latEl  = document.getElementById(`stat-lat-${iface.id}`);
+      const lossEl = document.getElementById(`stat-loss-${iface.id}`);
+
+      bwEl.textContent   = settings.bandwidth_kbps != null ? `${settings.bandwidth_kbps} kbps` : '—';
+      latEl.textContent  = settings.latency_ms     != null ? `${settings.latency_ms} ms`        : '—';
+      lossEl.textContent = settings.loss_percent   != null ? `${settings.loss_percent}%`         : '—';
+
+      [bwEl, latEl, lossEl].forEach(el => el.classList.toggle('live', active));
+    }
+  } catch (_) {}
+}
+
+async function checkHealth() {
+  const dot   = document.getElementById('health-dot');
+  const label = document.getElementById('health-label');
+  try {
+    const res = await fetch('/health');
+    if (res.ok) {
+      dot.className = 'health-dot ok';
+      label.textContent = 'online';
+    } else throw new Error();
+  } catch (_) {
+    dot.className = 'health-dot err';
+    label.textContent = 'unreachable';
+  }
+}
+
+async function fetchIp() {
+  document.getElementById('ip-display').textContent = window.location.hostname || '';
+}
+
+let _toastTimer = null;
+function toast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `show ${type}`;
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => { el.className = type; }, 5000);
+}
+
+function setLoading(btn, on) {
+  btn.classList.toggle('loading', on);
+  btn.disabled = on;
+}
+
+async function poll() {
+  await checkHealth();
+  await refreshState();
+  await fetchIp();
+}
+
+buildCards();
+poll();
+setInterval(poll, 3000);
+</script>
+</body>
+</html>
