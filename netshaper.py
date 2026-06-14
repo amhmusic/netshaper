@@ -202,18 +202,35 @@ def display_loop(stop_event: threading.Event) -> None:
     font    = ImageFont.load_default()
     line_h  = 10
 
+    IP_CYCLE_IFACES   = ["eth0", "eth1"]
+    TC_CYCLE_IFACES   = [IFACE_IN, IFACE_OUT]   # eth0, eth1
+
+    ip_index      = 0
+    tc_index      = 0
+    last_cycle_ts = time.monotonic()
+
     try:
         while not stop_event.is_set():
-            tc      = tc_read(DISPLAY_IFACE)
-            ip      = get_ip(DISPLAY_IFACE)
+            now = time.monotonic()
+            if now - last_cycle_ts >= IP_CYCLE_INTERVAL:
+                ip_index      = (ip_index + 1) % len(IP_CYCLE_IFACES)
+                tc_index      = (tc_index + 1) % len(TC_CYCLE_IFACES)
+                last_cycle_ts = now
+
+            cycle_ip_iface = IP_CYCLE_IFACES[ip_index]
+            cycle_tc_iface = TC_CYCLE_IFACES[tc_index]
+
+            ip = get_ip(cycle_ip_iface)
+            tc = tc_read(cycle_tc_iface)
 
             image = Image.new("1", (display.width, display.height))
             draw  = ImageDraw.Draw(image)
 
-            draw.text((0, 0),           ip,                     font=font, fill=255)
-            draw.text((0, line_h * 2),  f"BW:   {tc['download']}", font=font, fill=255)
-            draw.text((0, line_h * 3),  f"Lat:  {tc['latency']}",  font=font, fill=255)
-            draw.text((0, line_h * 4),  f"Loss: {tc['loss']}",     font=font, fill=255)
+            draw.text((0, 0),           f"{cycle_ip_iface}:{ip}",        font=font, fill=255)
+            draw.text((0, line_h * 1),  f"[{cycle_tc_iface}]",           font=font, fill=255)
+            draw.text((0, line_h * 2),  f"BW:   {tc['download']}",       font=font, fill=255)
+            draw.text((0, line_h * 3),  f"Lat:  {tc['latency']}",        font=font, fill=255)
+            draw.text((0, line_h * 4),  f"Loss: {tc['loss']}",           font=font, fill=255)
 
             display.image(image)
             display.show()
